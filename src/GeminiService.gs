@@ -27,8 +27,7 @@ function callGemini(userMessage, today) {
     ],
     tools: [{ googleSearch: {} }],  // Google Search Grounding を有効化
     generationConfig: {
-      temperature: 0.2,             // 出力の安定性を高めるため低めに設定
-      responseMimeType: 'text/plain'
+      temperature: 0.2              // 出力の安定性を高めるため低めに設定
     }
   };
 
@@ -85,6 +84,11 @@ function parseGeminiResponse(rawResponse) {
     const candidate = rawResponse.candidates && rawResponse.candidates[0];
     if (!candidate) {
       throw new Error('candidates が空です。');
+    }
+
+    // 安全フィルタ等によりコンテンツが生成されなかった場合
+    if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+      throw new Error(`生成が中断されました（期待値: STOP, 実際: ${candidate.finishReason}）`);
     }
 
     const text = candidate.content.parts[0].text.trim();
